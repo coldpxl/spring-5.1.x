@@ -78,6 +78,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 			Assert.noNullElements(locations, "Config locations must not be null");
 			this.configLocations = new String[locations.length];
 			for (int i = 0; i < locations.length; i++) {
+				// 该方法只是 主要是处理输入的配置路径中，并处理内部的占位符如: "${"、"}"、":"
 				this.configLocations[i] = resolvePath(locations[i]).trim();
 			}
 		}

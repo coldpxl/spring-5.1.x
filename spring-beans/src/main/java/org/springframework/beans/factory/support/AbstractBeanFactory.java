@@ -239,11 +239,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
 			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
 
-		// 解析beanName 如果以&开头去掉&开头，如果是别名获取到真正的名字
+		// 解析beanName 如果以&开头去掉&开头，如果是别名获取到真正的名字 （需要获取的是FactoryBean本身，我们需要在Bean的名字前加上"&"，所以此处就是为了获取到真正的 BeanName）
 		final String beanName = transformedBeanName(name);
 		Object bean;
 
-		// 单纯理解尝试从缓存中获取 bean
+		// 尝试从缓存中获取 bean （因为有一些Bean 在实例化非懒加载Bean 前已经实例化了比如：实现了 LoadTimeWeaverAware 接口的对象）
 		Object sharedInstance = getSingleton(beanName);
 		// 如果已经存在则返回
 		if (sharedInstance != null && args == null) {
@@ -256,7 +256,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
-			// 针对 FactoryBean 的处理
+			// 所以此处的逻辑就是根据传入的 name 与 sharedInstance 类型组合去获取
+			// 1、如果我们需要获取的是FactoryBean本身，我们需要在Bean的名字前加上"&"。在这种情况下，getObjectForBeanInstance将直接返回sharedInstance，也就是FactoryBean本身。
+			// 2、如果我们需要获取的是FactoryBean生成的Bean，我们就直接使用Bean的名字，不需要加"&"。在这种情况下，getObjectForBeanInstance将调用FactoryBean的getObject方法，并返回这个方法生成的Bean实例。
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
 
@@ -289,7 +291,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
+			// 此处debug 传入的是 false
 			if (!typeCheckOnly) {
+				// 将指定的bean标记为已创建（或即将创建）
 				markBeanAsCreated(beanName);
 			}
 
@@ -318,8 +322,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 				}
 
-				// 创建单例bean
+				// 是单例模式下，则创建单例bean
 				if (mbd.isSingleton()) {
+					// 调用 getSingleton 方法获取单例 bean
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
 							// 创建 bean
@@ -382,6 +387,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		}
 
 		// Check if required type matches the type of the actual bean instance.
+		// 检查所需要的 Class 类型是否指定; 如果指定了，则判断是否 bean 是否是;
+		// 											如果不是则进行转换，转换失败则抛出异常
 		if (requiredType != null && !requiredType.isInstance(bean)) {
 			try {
 				T convertedBean = getTypeConverter().convertIfNecessary(bean, requiredType);
@@ -1650,6 +1657,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 		// Don't let calling code try to dereference the factory if the bean isn't a factory.
 		// 如果是对FactoryBean的解引用，但bean对象不是FactoryBean，抛出异常
+		// 判断当前实例名称的名字是不是以 &开头（需要获取的是FactoryBean本身，我们需要在Bean的名字前加上"&"）
 		if (BeanFactoryUtils.isFactoryDereference(name)) {
 			if (beanInstance instanceof NullBean) {
 				return beanInstance;

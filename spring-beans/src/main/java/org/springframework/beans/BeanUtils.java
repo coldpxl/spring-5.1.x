@@ -167,7 +167,9 @@ public abstract class BeanUtils {
 	public static <T> T instantiateClass(Constructor<T> ctor, Object... args) throws BeanInstantiationException {
 		Assert.notNull(ctor, "Constructor must not be null");
 		try {
+			// 使给定的构造函数可访问，必要时显式设置为可访问
 			ReflectionUtils.makeAccessible(ctor);
+			// 判断实例化的类 是否是 kotlin 的类型，是的化实例化Kotlin类，否则使用 jdk的函数实例化
 			return (KotlinDetector.isKotlinReflectPresent() && KotlinDetector.isKotlinType(ctor.getDeclaringClass()) ?
 					KotlinDelegate.instantiateClass(ctor, args) : ctor.newInstance(args));
 		}

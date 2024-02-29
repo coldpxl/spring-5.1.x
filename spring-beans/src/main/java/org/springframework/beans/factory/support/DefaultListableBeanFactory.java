@@ -816,28 +816,27 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			logger.trace("Pre-instantiating singletons in " + this);
 		}
 
-		// Iterate over a copy to allow for init methods which in turn register new bean definitions.
-		// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
 		// 所有bean的名字
 		List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
 
 		// Trigger initialization of all non-lazy singleton beans...
 		// 触发所有非延迟加载单例bean的初始化，主要步骤为getBean
 		for (String beanName : beanNames) {
-			// 合并父BeanDefinition对象
-			// map.get(beanName)
+			// 这个方法的主要作用是获取一个合并后的Bean定义，如果需要，这个方法也会对Bean定义进行合并。
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
+			// bd 不是一个抽象类 同时是一个单例 同时不是 懒加载
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+				// 判断 bd 是否 实现了是 FactoryBean 接口的类
 				if (isFactoryBean(beanName)) {
+					// 如果我们需要获取的是FactoryBean本身，我们需要在Bean的名字前加上"&"。在这种情况下，getObjectForBeanInstance将直接返回sharedInstance，也就是FactoryBean本身。
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					// 如果是FactoryBean则加&
 					if (bean instanceof FactoryBean) {
 						final FactoryBean<?> factory = (FactoryBean<?>) bean;
 						boolean isEagerInit;
+						// 主要为了，是在一个可能有安全限制的环境中安全地调用isEagerInit()方法，以决定是否应立即初始化对应的Bean。
 						if (System.getSecurityManager() != null && factory instanceof SmartFactoryBean) {
-							isEagerInit = AccessController.doPrivileged((PrivilegedAction<Boolean>)
-											((SmartFactoryBean<?>) factory)::isEagerInit,
-									getAccessControlContext());
+							isEagerInit = AccessController.doPrivileged((PrivilegedAction<Boolean>) ((SmartFactoryBean<?>) factory)::isEagerInit, getAccessControlContext());
 						}
 						else {
 							isEagerInit = (factory instanceof SmartFactoryBean &&
@@ -856,10 +855,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		// Trigger post-initialization callback for all applicable beans...
+		// 触发所有bean的初始化后回调
 		for (String beanName : beanNames) {
+			// 从三级缓存中获取 单例Bean
 			Object singletonInstance = getSingleton(beanName);
+			// 实现了 SmartInitializingSingleton 接口的 单例Bean对象
 			if (singletonInstance instanceof SmartInitializingSingleton) {
 				final SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;
+				// 这里的处理与上面一致 是在一个可能有安全限制的环境中安全地调用afterSingletonsInstantiated()方法
 				if (System.getSecurityManager() != null) {
 					AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
 						smartSingleton.afterSingletonsInstantiated();

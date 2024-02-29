@@ -130,22 +130,27 @@ class ConstructorResolver {
 		else {
 			Object[] argsToResolve = null;
 			synchronized (mbd.constructorArgumentLock) {
+				// 已解析的构造函数或工厂方法。
 				constructorToUse = (Constructor<?>) mbd.resolvedConstructorOrFactoryMethod;
 				if (constructorToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached constructor...
+					// 已经缓存好的参数
 					argsToUse = mbd.resolvedConstructorArguments;
 					if (argsToUse == null) {
+						// 用于缓存部分解析好构造函数参数
 						argsToResolve = mbd.preparedConstructorArguments;
 					}
 				}
 			}
 			if (argsToResolve != null) {
+				// 这里根据已经解析出来的 构造函数中的参数，去获取，如果是Bean，则会执行创建
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve, true);
 			}
 		}
 
 		if (constructorToUse == null || argsToUse == null) {
 			// Take specified constructors, if any.
+			// 构造函数可能存在多个
 			Constructor<?>[] candidates = chosenCtors;
 			if (candidates == null) {
 				Class<?> beanClass = mbd.getBeanClass();
@@ -160,6 +165,7 @@ class ConstructorResolver {
 				}
 			}
 
+			// 只有一个构造函数 并且传入的参数值为null 并且 没有为此bean定义的构造函数参数值
 			if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Constructor<?> uniqueCandidate = candidates[0];
 				if (uniqueCandidate.getParameterCount() == 0) {
@@ -168,6 +174,7 @@ class ConstructorResolver {
 						mbd.constructorArgumentsResolved = true;
 						mbd.resolvedConstructorArguments = EMPTY_ARGS;
 					}
+					// 类似创建使用 无参构造函数创建
 					bw.setBeanInstance(instantiate(beanName, mbd, uniqueCandidate, EMPTY_ARGS));
 					return bw;
 				}
@@ -178,13 +185,20 @@ class ConstructorResolver {
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			ConstructorArgumentValues resolvedValues = null;
 
+			// 需要最小的参数个数
 			int minNrOfArgs;
 			if (explicitArgs != null) {
 				minNrOfArgs = explicitArgs.length;
 			}
 			else {
+				// 返回此bean的构造函数参数值（这里是指，如果你指定了使用哪一个构造函数，那么就会返回，否则为 null）
 				ConstructorArgumentValues cargs = mbd.getConstructorArgumentValues();
 				resolvedValues = new ConstructorArgumentValues();
+				// 解析匹配构造函数和参数的，这里面处理，多个有参数的构造函数，如何进行选择
+				//		首先，Spring会获取Bean定义中的构造函数参数值（ConstructorArgumentValues）
+				// 		接着，Spring会遍历目标bean类的所有构造函数。对于每个构造函数，Spring会检查其参数类型和数量是否与ConstructorArgumentValues匹配。
+				//		如果找到一个构造函数，其参数类型和数量与ConstructorArgumentValues完全匹配，那么Spring就会选择这个构造函数来实例化bean。
+				//		如果没有找到完全匹配的构造函数，但是找到了多个部分匹配的构造函数，那么Spring会选择参数数量最多的那个。
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
 
@@ -282,6 +296,7 @@ class ConstructorResolver {
 		}
 
 		Assert.state(argsToUse != null, "Unresolved constructor arguments");
+		// 根据匹配到的 构造函数执行（constructorToUse）进行
 		bw.setBeanInstance(instantiate(beanName, mbd, constructorToUse, argsToUse));
 		return bw;
 	}

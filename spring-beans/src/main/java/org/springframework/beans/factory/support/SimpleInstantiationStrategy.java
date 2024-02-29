@@ -59,17 +59,21 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 
 	@Override
 	public Object instantiate(RootBeanDefinition bd, @Nullable String beanName, BeanFactory owner) {
-		// Don't override the class with CGLIB if no overrides.
+		// 在Spring中，是指在Spring Bean配置文件中使用<lookup-method>或<replaced-method>元素为某个bean定义的方法实现提供替代或动态更新
+		// 对应存在注解 @Lookup
 		if (!bd.hasMethodOverrides()) {
 			Constructor<?> constructorToUse;
 			synchronized (bd.constructorArgumentLock) {
+				// 这里获取已经解析好的构造函数或工厂方法
 				constructorToUse = (Constructor<?>) bd.resolvedConstructorOrFactoryMethod;
-				if (constructorToUse == null) {
+				if (constructorToUse == null) {  // 如果没有解析好的构造函数或工厂方法，那么就需要解析
 					final Class<?> clazz = bd.getBeanClass();
 					if (clazz.isInterface()) {
+						// 如果这个Class是一个接口，那么就抛出一个异常，因为接口不能被实例化。
 						throw new BeanInstantiationException(clazz, "Specified class is an interface");
 					}
 					try {
+						// 获取构造函数
 						if (System.getSecurityManager() != null) {
 							constructorToUse = AccessController.doPrivileged(
 									(PrivilegedExceptionAction<Constructor<?>>) clazz::getDeclaredConstructor);
@@ -84,10 +88,12 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 					}
 				}
 			}
+			// 通过构造函数实例化Bean
 			return BeanUtils.instantiateClass(constructorToUse);
 		}
 		else {
 			// Must generate CGLIB subclass.
+			// 如果存在方法覆盖，那么需要通过CGLIB生成子类进行实例化。
 			return instantiateWithMethodInjection(bd, beanName, owner);
 		}
 	}
