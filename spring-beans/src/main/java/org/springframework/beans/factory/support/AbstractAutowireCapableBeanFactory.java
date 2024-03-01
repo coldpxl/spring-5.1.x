@@ -595,8 +595,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
-			// 放到所谓的三级缓存中（registeredSingletons）
-			// 并存放 beanName 和后面的 接口实现（singletonFactories）
+			// 放到对应的 三级缓存中
+			// 第三级缓存的方法解释后面的匿名内部类解释返回值的两种情况
+			//		1、如果该没有实现 SmartInstantiationAwareBeanPostProcessor 接口的，则直接返回 bean（构造函数生成）
+			//		2、遍历后置处理器，如果有实现了 SmartInstantiationAwareBeanPostProcessor 接口的则调用 getEarlyBeanReference 方法返回最终的 Bean实例对象
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
@@ -654,7 +656,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Register bean as disposable.
 		try {
-			// 将给定的bean添加到此工厂中的一次性bean列表中，注册实现了 DestructionAwareBeanPostProcessor 接口 和/或 在工厂关闭时调用的给定destroy方法（如果适用）。仅适用于 单例模式
+			// 将给定的bean添加到此工厂中的一次性bean列表中，注册实现了 DestructionAwareBeanPostProcessor 接口 和/或 在工厂关闭时调用的给定destroy方法（仅适用于 单例模式）。
 			registerDisposableBeanIfNecessary(beanName, bean, mbd);
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -963,8 +965,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @return the object to expose as bean reference
 	 */
 	protected Object getEarlyBeanReference(String beanName, RootBeanDefinition mbd, Object bean) {
+		// bean 构造函数生成的 Bean实例对象
 		Object exposedObject = bean;
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+			// 遍历后置处理器，如果有实现了 SmartInstantiationAwareBeanPostProcessor 接口的则调用 getEarlyBeanReference 方法返回最终的 Bean实例对象
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof SmartInstantiationAwareBeanPostProcessor) {
 					SmartInstantiationAwareBeanPostProcessor ibp = (SmartInstantiationAwareBeanPostProcessor) bp;
