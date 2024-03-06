@@ -63,7 +63,9 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		// 添加 ConfigurationClassPostProcessor、AutowiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor（如果使用了javax.annotation.Resource java的 Resource注解）的后置处理器
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+		// includeFilters 注入 @Component 注解的拦截器，同时 @Repository、@Service、@Controller 因为都有 @Component的元注解，所以也会被识别
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -96,7 +98,12 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * @param basePackages the packages to scan for component classes
 	 */
 	public AnnotationConfigApplicationContext(String... basePackages) {
+		// 添加 ConfigurationClassPostProcessor、AutowiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor（如果使用了javax.annotation.Resource java的 Resource注解） ...(还有一些兼容)
+		// ConfigurationClassPostProcessor 不是 BeanPostProcessor（Bean的后置处理器） 而是BeanFactoryPostProcessor（BeanFactory的后置处理器）
+		// AutowiredAnnotationBeanPostProcessor、CommonAnnotationBeanPostProcessor 是 BeanPostProcessor
+		// includeFilters 注入 @Component 注解的拦截器，同时 @Repository、@Service、@Controller 因为都有 @Component的元注解，所以也会被识别
 		this();
+		// 开启扫描的处理
 		scan(basePackages);
 		refresh();
 	}

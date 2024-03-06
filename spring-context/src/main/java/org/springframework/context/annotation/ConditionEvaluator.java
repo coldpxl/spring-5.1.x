@@ -68,6 +68,7 @@ class ConditionEvaluator {
 	 * @return if the item should be skipped
 	 */
 	public boolean shouldSkip(AnnotatedTypeMetadata metadata) {
+		// 是否应该跳过
 		return shouldSkip(metadata, null);
 	}
 

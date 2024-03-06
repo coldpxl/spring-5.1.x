@@ -529,6 +529,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				Tell the subclass to refresh the internal bean factory.
 			 	获取BeanFactory；默认实现是DefaultListableBeanFactory
                 加载BeanDefition 并注册到 BeanDefitionRegistry
+
+                注解的加载是直接返回了 DefaultListableBeanFactory
 			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
@@ -548,6 +550,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				/*
 					Invoke factory processors registered as beans in the context.
 					实例化实现了BeanFactoryPostProcessor接口的Bean，并调用接口方法
+					注解的主要这里会调用  ConfigurationClassPostProcessor 完成所有注解的解析，并生产成 BeanDefinition 进行注册
 				 */
 				invokeBeanFactoryPostProcessors(beanFactory);
 
@@ -749,6 +752,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+		// 调用 BeanFactory 的后置处理器（注解是，ConfigurationClassPostProcessor）
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime

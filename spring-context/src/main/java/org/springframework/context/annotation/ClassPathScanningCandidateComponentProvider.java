@@ -204,6 +204,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	 */
 	@SuppressWarnings("unchecked")
 	protected void registerDefaultFilters() {
+		//  注入 @Component 注解的拦截器，同时 @Repository、@Service、@Controller 因为都有 @Component的元注解，所以也会被识别
 		this.includeFilters.add(new AnnotationTypeFilter(Component.class));
 		ClassLoader cl = ClassPathScanningCandidateComponentProvider.class.getClassLoader();
 		try {
@@ -418,6 +419,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		try {
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
 					resolveBasePackage(basePackage) + '/' + this.resourcePattern;
+			// 获取搜索路径匹配的所有资源（通常是类文件）
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
@@ -427,7 +429,9 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 				}
 				if (resource.isReadable()) {
 					try {
+						// 资源的元数据（如类的注解信息)
 						MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
+						// isCandidateComponent 识别注解
 						if (isCandidateComponent(metadataReader)) {
 							ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
 							sbd.setResource(resource);
@@ -494,7 +498,9 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			}
 		}
 		for (TypeFilter tf : this.includeFilters) {
+			// 针对 @Component 注解，注入的是 AnnotationTypeFilter，这里调用父类 AbstractTypeHierarchyTraversingFilter.match 方法
 			if (tf.match(metadataReader, getMetadataReaderFactory())) {
+				// 是否符合条件 true-> 符合
 				return isConditionMatch(metadataReader);
 			}
 		}

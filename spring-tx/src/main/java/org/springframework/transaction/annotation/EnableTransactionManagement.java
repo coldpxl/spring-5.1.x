@@ -185,6 +185,7 @@ public @interface EnableTransactionManagement {
 	 * Indicate the ordering of the execution of the transaction advisor
 	 * when multiple advices are applied at a specific joinpoint.
 	 * <p>The default is {@link Ordered#LOWEST_PRECEDENCE}.
+	 * 排在最后进行加载
 	 */
 	int order() default Ordered.LOWEST_PRECEDENCE;
 

@@ -1,7 +1,7 @@
 package com.lagou.anno;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author pxl
@@ -11,11 +11,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class Person {
 
-	@Autowired
-	private HelloWorld helloWorld;
-
-	public void say() {
-		helloWorld.sayHello();
+	public Person() {
+		System.out.println("Person 执行构造函数");
 	}
 
+	@Transactional
+	public void testTransfer() {
+		System.out.println("执行事务");
+	}
 }

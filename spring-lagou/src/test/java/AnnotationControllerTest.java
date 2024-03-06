@@ -1,4 +1,3 @@
-import com.lagou.anno.HelloWorld;
 import com.lagou.anno.Person;
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -13,7 +12,7 @@ public class AnnotationControllerTest {
 
 		// 获取 Person Bean 并调用方法
 		Person person = context.getBean(Person.class);
-		person.say();
+		// person.testTransfer();
 
 		// 关闭应用上下文
 		context.close();

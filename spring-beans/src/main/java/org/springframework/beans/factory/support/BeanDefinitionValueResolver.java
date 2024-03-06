@@ -105,11 +105,11 @@ class BeanDefinitionValueResolver {
 	public Object resolveValueIfNecessary(Object argName, @Nullable Object value) {
 		// We must check each value to see whether it requires a runtime reference
 		// to another bean to be resolved.
-		if (value instanceof RuntimeBeanReference) {
+		if (value instanceof RuntimeBeanReference) { // 当属性值是对其他bean的直接引用时
 			RuntimeBeanReference ref = (RuntimeBeanReference) value;
 			return resolveReference(argName, ref);
 		}
-		else if (value instanceof RuntimeBeanNameReference) {
+		else if (value instanceof RuntimeBeanNameReference) { // 当属性值是对其他bean名称的引用，且这个名称可能在运行时通过表达式计算得到。
 			String refName = ((RuntimeBeanNameReference) value).getBeanName();
 			refName = String.valueOf(doEvaluate(refName));
 			if (!this.beanFactory.containsBean(refName)) {
@@ -118,19 +118,19 @@ class BeanDefinitionValueResolver {
 			}
 			return refName;
 		}
-		else if (value instanceof BeanDefinitionHolder) {
+		else if (value instanceof BeanDefinitionHolder) { // 当属性值本身是一个bean定义，这个bean定义有明确的名称和可能的别名。
 			// Resolve BeanDefinitionHolder: contains BeanDefinition with name and aliases.
 			BeanDefinitionHolder bdHolder = (BeanDefinitionHolder) value;
 			return resolveInnerBean(argName, bdHolder.getBeanName(), bdHolder.getBeanDefinition());
 		}
-		else if (value instanceof BeanDefinition) {
+		else if (value instanceof BeanDefinition) { // 当属性值是一个匿名内部bean的定义
 			// Resolve plain BeanDefinition, without contained name: use dummy name.
 			BeanDefinition bd = (BeanDefinition) value;
 			String innerBeanName = "(inner bean)" + BeanFactoryUtils.GENERATED_BEAN_NAME_SEPARATOR +
 					ObjectUtils.getIdentityHexString(bd);
 			return resolveInnerBean(argName, innerBeanName, bd);
 		}
-		else if (value instanceof ManagedArray) {
+		else if (value instanceof ManagedArray) { // 当属性值是一个需要在运行时解析其元素类型的数组
 			// May need to resolve contained runtime references.
 			ManagedArray array = (ManagedArray) value;
 			Class<?> elementType = array.resolvedElementType;
@@ -154,7 +154,7 @@ class BeanDefinitionValueResolver {
 			}
 			return resolveManagedArray(argName, (List<?>) value, elementType);
 		}
-		else if (value instanceof ManagedList) {
+		else if (value instanceof ManagedList) { // 当属性值是一个集合（列表、集合或映射），这个集合中包含的元素可能需要在运行时解析。
 			// May need to resolve contained runtime references.
 			return resolveManagedList(argName, (List<?>) value);
 		}
@@ -166,7 +166,7 @@ class BeanDefinitionValueResolver {
 			// May need to resolve contained runtime references.
 			return resolveManagedMap(argName, (Map<?, ?>) value);
 		}
-		else if (value instanceof ManagedProperties) {
+		else if (value instanceof ManagedProperties) { // 当属性值是一组属性，这些属性的键或值可能需要在运行时解析或转换
 			Properties original = (Properties) value;
 			Properties copy = new Properties();
 			original.forEach((propKey, propValue) -> {
@@ -185,7 +185,7 @@ class BeanDefinitionValueResolver {
 			});
 			return copy;
 		}
-		else if (value instanceof TypedStringValue) {
+		else if (value instanceof TypedStringValue) { // 当属性值是一个字符串，但需要转换为另一种类型。
 			// Convert value to target type here.
 			TypedStringValue typedStringValue = (TypedStringValue) value;
 			Object valueObject = evaluate(typedStringValue);
@@ -205,10 +205,10 @@ class BeanDefinitionValueResolver {
 						"Error converting typed String value for " + argName, ex);
 			}
 		}
-		else if (value instanceof NullBean) {
+		else if (value instanceof NullBean) { // 当属性值显式地设置为null。
 			return null;
 		}
-		else {
+		else { // 当属性值不符合上述任何一种特殊情况，但可能需要进行表达式求值或类型转换。
 			return evaluate(value);
 		}
 	}

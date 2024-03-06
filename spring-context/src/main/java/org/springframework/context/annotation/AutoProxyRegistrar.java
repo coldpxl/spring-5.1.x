@@ -63,14 +63,20 @@ public class AutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 			if (candidate == null) {
 				continue;
 			}
+			//  EnableTransactionManagement 注解中
+			//	mode 默认是 AdviceMode.PROXY，proxyTargetClass 默认是 false
 			Object mode = candidate.get("mode");
 			Object proxyTargetClass = candidate.get("proxyTargetClass");
 			if (mode != null && proxyTargetClass != null && AdviceMode.class == mode.getClass() &&
 					Boolean.class == proxyTargetClass.getClass()) {
 				candidateFound = true;
+				// 默认等于
 				if (mode == AdviceMode.PROXY) {
+					// 默认注册 InfrastructureAdvisorAutoProxyCreator 的 BeanDefinition对象
 					AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);
+					// 默认不执行
 					if ((Boolean) proxyTargetClass) {
+						// 注册表中包含，org.springframework.aop.config.internalAutoProxyCreator，就把该类中的 proxyTargetClass 修改 true
 						AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
 						return;
 					}
